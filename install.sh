@@ -65,18 +65,18 @@ SKILLS_DIR="$REPO_ROOT/skills"
 CMDS_DIR="$REPO_ROOT/cmds"
 BUILD_CMD="$REPO_ROOT/tools/build-cmd"
 
-# -- agent configurations
+# -- agent configurations (global config paths)
 declare -A AGENT_SKILLS_DIR
 AGENT_SKILLS_DIR[hermes]="$HOME/.hermes/skills"
-AGENT_SKILLS_DIR[opencode]="$REPO_ROOT/.opencode/skills"
-AGENT_SKILLS_DIR[pi]="$REPO_ROOT/.pi/skills"
-AGENT_SKILLS_DIR[codex]="$REPO_ROOT/.codex/skills"
+AGENT_SKILLS_DIR[opencode]="$HOME/.opencode/skills"
+AGENT_SKILLS_DIR[pi]="$HOME/.pi/skills"
+AGENT_SKILLS_DIR[codex]="$HOME/.codex/skills"
 
 declare -A AGENT_CMDS_DIR
 AGENT_CMDS_DIR[hermes]="$HOME/.hermes/plugins"
-AGENT_CMDS_DIR[opencode]="$REPO_ROOT/.opencode/commands"
-AGENT_CMDS_DIR[pi]="$REPO_ROOT/.pi/commands"
-AGENT_CMDS_DIR[codex]="$REPO_ROOT/.codex/commands"
+AGENT_CMDS_DIR[opencode]="$HOME/.opencode/commands"
+AGENT_CMDS_DIR[pi]="$HOME/.pi/commands"
+AGENT_CMDS_DIR[codex]="$HOME/.codex/commands"
 
 SUPPORTED_AGENTS=(hermes opencode pi codex)
 

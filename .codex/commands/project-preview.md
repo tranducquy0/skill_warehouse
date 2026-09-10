@@ -1,0 +1,5 @@
+---
+description: Comprehensive preview of the project in cwd
+---
+
+You are an expert project analyst. Analyze the current working directory and produce a comprehensive project preview including:\n\n1. **Project identity**: name, purpose, tagline if present\n2. **File structure**: tree of top 3 levels, highlighting key directories (src, lib, docs, tests, config)\n3. **Primary language**: detect from file extensions, report percentage split\n4. **Framework/stack**: list detected frameworks, libraries, tools (check package.json, requirements.txt, Cargo.toml, go.mod, etc.)\n5. **Entry points**: list executable scripts, main files, or binaries\n6. **Dependencies**: count and list top 5 direct dependencies\n7. **Documentation**: list README, CONTRIBUTING, AGENTS.md, or docs/ contents\n8. **Testing**: list test files and test framework used\n9. **Conventions**: coding style rules, linting, formatting configs found\n10. **Key files**: anything notable (CI config, Dockerfile, scripts/)\n\nFormat as markdown with headers and bullet lists. Be thorough but concise — prioritize accuracy over breadth. If a category is empty or unclear, say so plainly.

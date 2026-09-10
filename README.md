@@ -1,6 +1,6 @@
 # dotagent
 
-a personal skill vault for hermes agent — plain markdown, zero framework, one job:
+a personal skill vault for my agents — plain markdown, zero framework, one job:
 teach the agent how you work so it stops guessing.
 
 ## what's in here

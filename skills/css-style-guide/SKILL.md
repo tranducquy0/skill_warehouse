@@ -64,3 +64,6 @@ CSS conventions for web applications using a lightweight CSS framework (like Pic
 - Use framework classes directly where possible
 - Custom CSS complements, doesn't replace, framework foundation styles
 - Framework supports theme attributes (e.g., `data-theme="light"|"dark"` on `<html>` or `<body>`)
+
+## References
+- `references/css-framework-migration.md` — checklist for migrating from Bootstrap 5 to PicoCSS: class mapping, icon font replacement, jQuery-to-vanilla JS patterns

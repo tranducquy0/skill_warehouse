@@ -96,6 +96,9 @@ ERROR CODES
 - Error messages in code should match the docs voice — playful, not generic
 - No skill fragmentation — a narrow README-specific skill should be broadened into a class-level umbrella (e.g. `docs-writing-voice`) that covers all documentation types rather than splitting by incident or file type
 
+## References
+- `references/plain-text-doc-formats.md` — detailed plain-text doc formatting rules, section ordering, and error code style
+
 ## Example Voice
 > every tool ships with a `require` function that bails if a needed binary is missing. here's what expects on the host:
 

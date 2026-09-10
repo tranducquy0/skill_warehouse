@@ -4,11 +4,21 @@ IFS=$'\n\t'
 
 # build-cmd: generate agent-specific command files from JSON definitions
 #
+# Universal argument syntax in the prompt field:
+#   [arg_name]  — single named argument (e.g. [file], [scope])
+#   [args]      — all arguments as a single string
+#
+# Per-agent translation:
+#   Hermes     — Jinja2-like {{ var }} interpolation, env-var substitution at runtime
+#   OpenCode   — $ARGUMENTS for [args]; <name from $ARGUMENTS> hints for [arg_name]
+#   Pi         — positional ${1}..${9} and $@; position by order of first appearance
+#   Codex      — like OpenCode ($ARGUMENTS) + arguments: frontmatter list
+#
 # Usage:
 #   tools/build-cmd <cmd.json> --hermes   # writes to ~/.hermes/plugins/
-#   tools/build-cmd <cmd.json> --opencode # writes to .opencode/commands/
-#   tools/build-cmd <cmd.json> --pi       # writes to .pi/commands/
-#   tools/build-cmd <cmd.json> --codex    # writes to .codex/commands/
+#   tools/build-cmd <cmd.json> --opencode # writes to $XDG_CONFIG_HOME/opencode/commands/
+#   tools/build-cmd <cmd.json> --pi       # writes to $HOME/.pi/commands/
+#   tools/build-cmd <cmd.json> --codex    # writes to $HOME/.codex/commands/
 #   tools/build-cmd <cmd.json> --all      # writes for every supported agent
 
 # -- helpers
@@ -28,11 +38,21 @@ JSON format (cmds/<name>.json):
   {
     "name": "command-name",
     "desc": "short description",
-    "prompt": "full prompt text"
+    "prompt": "full prompt text with [arg_name] and/or [args] placeholders"
   }
 
-note: '{{var}}' placeholders only substitute at runtime for hermes (env vars).
-      other agents get a warning if the prompt uses them.
+Universal argument syntax:
+  [arg_name]  — single named argument (e.g. [file], [scope])
+  [args]      — all arguments as a single string
+
+Per-agent translation:
+  Hermes     — Jinja2-like {{ var }} interpolation; env-var substitution at runtime
+  OpenCode   — $ARGUMENTS for [args]; <name from $ARGUMENTS> hints for [arg_name]
+  Pi         — positional ${1}..${9} and $@; position by order of first appearance
+  Codex      — like OpenCode ($ARGUMENTS) + arguments: frontmatter list
+
+note: '{{var}}' placeholders (Hermes env-var substitution) coexist with [arg_name]
+      universal args. both are translated; existing {{var}} remains unchanged.
 EOF
 }
 
@@ -82,6 +102,81 @@ cmd_name=$(json_get name)
 cmd_desc=$(json_get desc)
 cmd_prompt=$(json_get prompt)
 
+# -- extract universal arguments from prompt
+#    regex matches [arg_name] (single arg) and [args] (all args as string)
+#    unique arg_names are collected in order of first appearance
+
+declare -A ARG_POS
+arg_list=()
+args_count=0
+
+while IFS= read -r match; do
+    [ -z "$match" ] && continue
+    if [ "$match" = "[args]" ]; then
+        args_count=$((args_count + 1))
+        continue
+    fi
+    # match is like "[file]" — strip brackets
+    arg_name="${match#[}"
+    arg_name="${arg_name%]}"
+    if [ -z "${ARG_POS[$arg_name]+x}" ]; then
+        pos=$(( ${#arg_list[@]} + 1 ))
+        ARG_POS[$arg_name]=$pos
+        arg_list+=("$arg_name")
+    fi
+done < <(grep -oE '\[[a-zA-Z_][a-zA-Z0-9_]*\]|[[]args[]]' <<< "$cmd_prompt" || true)
+
+# -- translate prompt per agent
+#    Hermes: [arg_name] → {{ arg_name }}, [args] → {{ args }}
+#    OpenCode: [arg_name] → <arg_name> from $ARGUMENTS>, [args] → $ARGUMENTS
+#    Pi: [arg_name] → \${N} (positional), [args] → \$@
+#    Codex: same as OpenCode, then prepend arguments: frontmatter
+
+translate_for_hermes() {
+    local p="$1"
+    python3 -c 'import re, sys; p = sys.stdin.read(); print(re.sub(r"\[([a-zA-Z_][a-zA-Z0-9_]*)\]", r"{{\1}}", p).replace("[args]", "{{ args }}"))' <<< "$p"
+}
+
+translate_for_opencode() {
+    local p="$1"
+    python3 -c 'import re, sys; p = sys.stdin.read()
+def repl(m):
+    name = m.group(1)
+    return f"<{name} from $ARGUMENTS>" if name else "$ARGUMENTS"
+print(re.sub(r"\[([a-zA-Z_][a-zA-Z0-9_]*)\]", repl, p).replace("[args]", "$ARGUMENTS"))' <<< "$p"
+}
+
+translate_for_pi() {
+    local p="$1"
+    python3 -c 'import re, sys; p = sys.stdin.read(); seen = {}
+def repl(m):
+    name = m.group(1)
+    if name:
+        if name not in seen: seen[name] = len(seen) + 1
+        n = seen[name]
+        if n > 9: print(f"warning: {name} appears after 9 args, pi caps at ${{9}}", file=sys.stderr); n = 9
+        return f"${{{n}}}"
+    return "$@"
+print(re.sub(r"\[([a-zA-Z_][a-zA-Z0-9_]*)\]", repl, p).replace("[args]", "$@"))' <<< "$p"
+}
+
+translate_for_codex() {
+    local p="$1"
+    python3 -c 'import re, sys, json; p = sys.stdin.read(); seen = {}
+def repl(m):
+    name = m.group(1)
+    if name:
+        if name not in seen: seen[name] = len(seen) + 1
+        n = seen[name]
+        if n > 9: print(f"warning: {name} appears after 9 args", file=sys.stderr)
+        return f"<{name} from $ARGUMENTS>"
+    return "$ARGUMENTS"
+p = re.sub(r"\[([a-zA-Z_][a-zA-Z0-9_]*)\]", repl, p).replace("[args]", "$ARGUMENTS")
+args_meta = [{"name": n, "description": f"{n} argument"} for n in seen]
+print(p)
+print(json.dumps(args_meta))' <<< "$p"
+}
+
 # -- resolve output directory
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -109,8 +204,10 @@ for agent in "${agents[@]}"; do
     case "$agent" in
         hermes)
             # Hermes plugin: executable bash script that prints the prompt.
-            # {{var}} placeholders substitute from matching env vars at runtime.
-            # Uses a quoted heredoc delimiter to keep prompt content verbatim.
+            # Universal args become {{ arg_name }} / {{ args }} — env-var
+            # substitution at runtime (existing behavior).
+
+            translated_prompt=$(translate_for_hermes "$cmd_prompt")
 
             cat > "$out_dir/${cmd_name}.sh" <<'SCRIPT_HEADER'
 #!/usr/bin/env bash
@@ -126,7 +223,7 @@ SCRIPT_HEADER
 
             local_heredoc_delim="PROMPT_EOF_${cmd_name//-/}_$$"
             printf 'PROMPT=$(cat <<'"'"'%s'"'"'\n' "$local_heredoc_delim" >> "$out_dir/${cmd_name}.sh"
-            printf '%s\n' "$cmd_prompt" >> "$out_dir/${cmd_name}.sh"
+            printf '%s\n' "$translated_prompt" >> "$out_dir/${cmd_name}.sh"
             printf '%s\n' "$local_heredoc_delim" >> "$out_dir/${cmd_name}.sh"
             printf ')\n' >> "$out_dir/${cmd_name}.sh"
             printf '\n' >> "$out_dir/${cmd_name}.sh"
@@ -135,7 +232,7 @@ SCRIPT_HEADER
 # Substitute {{var}} placeholders with matching env vars
 output="$PROMPT"
 while [[ "$output" == *"{{"* ]]; do
-    var=$(printf '%s' "$output" | sed -n 's/.*{{\([a-zA-Z_]*\)}}.*/\1/p')
+    var=$(printf '%s' "$output" | sed -n 's/.*{{\([a-zA-Z_]*\)}.*/\1/p')
     [ -z "$var" ] && break
     val="${!var:-}"
     output="${output//\{\{$var\}\}/$val}"
@@ -146,13 +243,43 @@ printf '%s\n' "$output"
 SCRIPT_BODY
             chmod +x "$out_dir/${cmd_name}.sh"
             ;;
-        opencode|pi|codex)
+        opencode)
+            translated_prompt=$(translate_for_opencode "$cmd_prompt")
+
             cat > "$out_dir/${cmd_name}.md" <<EOF
 ---
 description: ${cmd_desc}
 ---
 
-${cmd_prompt}
+${translated_prompt}
+EOF
+            ;;
+        pi)
+            translated_prompt=$(translate_for_pi "$cmd_prompt")
+
+            cat > "$out_dir/${cmd_name}.md" <<EOF
+---
+description: ${cmd_desc}
+---
+
+${translated_prompt}
+EOF
+            ;;
+        codex)
+            # Codex: translate prompt, then prepend arguments: frontmatter
+            # translate_for_codex outputs prompt on stdout line 1, args JSON on line 2
+            codex_combined=$(translate_for_codex "$cmd_prompt")
+            codex_prompt=$(echo "$codex_combined" | head -n -1)
+            codex_args_json=$(echo "$codex_combined" | tail -n 1 | python3 -c "import sys, json; print(json.dumps(json.loads(sys.stdin.read()), indent=2))")
+
+            cat > "$out_dir/${cmd_name}.md" <<EOF
+---
+description: ${cmd_desc}
+arguments:
+${codex_args_json}
+---
+
+${codex_prompt}
 EOF
             ;;
     esac

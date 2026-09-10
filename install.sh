@@ -205,6 +205,11 @@ log_info "Done"
 
 # -- update skill tracker
 if [ "$dry_run" != true ]; then
+    # Pass bash arrays to Python via env vars (properly expanded)
+    SKILL_NAMES_JSON=$(printf '%s\n' "${skill_names[@]}" | jq -R . | jq -s .)
+    TARGET_AGENTS_JSON=$(printf '%s\n' "${target_agents[@]}" | jq -R . | jq -s .)
+    export SKILL_NAMES_JSON TARGET_AGENTS_JSON
+
     python3 -c "
 import json, os, datetime
 from pathlib import Path
@@ -215,18 +220,20 @@ if os.path.exists(tracker_path):
     with open(tracker_path) as f:
         tracker = json.load(f)
 
+skill_names = json.loads(os.environ['SKILL_NAMES_JSON'])
+target_agents = json.loads(os.environ['TARGET_AGENTS_JSON'])
+
 # Build current state
 skills_state = []
-for skill_name in '${skill_names[@]}'.split():
+for skill_name in skill_names:
     entry = {'name': skill_name, 'category': '', 'installed': {}}
-    # Get category from skills_list.json
     with open(os.path.join(os.environ['REPO_ROOT'], 'skills_list.json')) as f:
         data = json.load(f)
         for s in data['skills']:
             if s['name'] == skill_name:
                 entry['category'] = s['category']
                 break
-    for agent in '${target_agents[@]}'.split():
+    for agent in target_agents:
         if agent == 'hermes':
             entry['installed'][agent] = {
                 'path': os.path.join(os.environ['HOME'], '.hermes/skills', skill_name),
@@ -247,10 +254,11 @@ for skill_name in '${skill_names[@]}'.split():
     skills_state.append(entry)
 
 commands_state = []
-for cmd_json in Path(os.environ['CMDS_DIR']).glob('*.json'):
+cmds_dir = os.environ.get('CMDS_DIR', os.path.join(os.environ['REPO_ROOT'], 'cmds'))
+for cmd_json in Path(cmds_dir).glob('*.json'):
     cmd_name = cmd_json.stem
     entry = {'name': cmd_name, 'installed': {}}
-    for agent in '${target_agents[@]}'.split():
+    for agent in target_agents:
         if agent == 'hermes':
             entry['installed'][agent] = {
                 'path': os.path.join(os.environ['HOME'], '.hermes/plugins', f'{cmd_name}.sh'),
@@ -272,10 +280,10 @@ for cmd_json in Path(os.environ['CMDS_DIR']).glob('*.json'):
 
 tracker['skills'] = skills_state
 tracker['commands'] = commands_state
-tracker['last_updated'] = datetime.datetime.utcnow().isoformat() + 'Z'
+tracker['last_updated'] = datetime.datetime.now(datetime.timezone.utc).isoformat().replace('+00:00', 'Z')
 
 with open(tracker_path, 'w') as f:
     json.dump(tracker, f, indent=2)
-print(f'updated skill_tracker.json')
+print('updated skill_tracker.json')
 "
 fi

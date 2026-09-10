@@ -1,23 +1,26 @@
 ---
 name: python-style-guide
 category: software-development
-description: Python style guide for ant knowledge base project.
+description: Python code style guide for Flask projects.
 ---
 
-# Python Code Style Guide for `ant` Project
+# Python Code Style Guide (Flask Projects)
 
 ## Overview
-`ant` is a small Flask-based single-user knowledge base system. Code style prioritizes readability, minimalism, and modularity over cleverness.
+Conventions for Python Flask web applications. Prioritizes readability, minimalism, and modularity over cleverness.
 
 ## File Structure
-- `ant.py` — app entry point, blueprint registration, config loading
-- `config.py` — all configuration as a `Config` class + module-level `HOST`/`PORT`
-- `blueprints/` — Flask blueprint route handlers (`index.py`, `content.py`, `auth.py`)
-- `services/` — business logic (`auth.py`, `content.py`, `auth_decorator.py`)
-- `utilities/` — generic helpers (`markdown.py`, `file_operation.py`, `template.py`)
-- `templates/` — Jinja2 templates (`.j2` extension)
-- `static/` — CSS (`css/style.css`, `css/codehilite.css`) and JS (`js/script.js`)
-- `docs/` — Markdown content files served as documentation
+```
+project/
+├── app.py            # Entry point: app creation, config loading, blueprint registration
+├── config.py         # All configuration as a Config class + module-level HOST/PORT
+├── blueprints/       # Flask blueprint route handlers
+├── services/         # Business logic (data access, auth, content loading)
+├── utilities/        # Generic helpers (parsing, file ops, template utils)
+├── templates/        # Jinja2 templates (use .j2 extension)
+├── static/           # CSS and JS assets
+└── docs/             # Markdown content or documentation files
+```
 
 ## Naming Conventions
 - **Filenames**: snake_case (e.g., `auth_decorator.py`)
@@ -52,7 +55,7 @@ import utilities.markdown as mdu
 - Docstrings/comments for non-obvious logic
 - Avoid frameworks within frameworks — keep it simple
 
-## Dependencies (pinned)
+## Dependencies
 From `requirements.txt`:
-- Flask 3.1.x, Flask-Bcrypt, Markdown 3.10+, Pygments, Jinja2
+- Flask, Flask-Bcrypt, Markdown, Pygments, Jinja2
 - No ORM, no database, no JS frameworks beyond vanilla

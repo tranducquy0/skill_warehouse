@@ -1,32 +1,32 @@
 ---
 name: html-style-guide
 category: software-development
-description: HTML/Jinja2 template style guide for ant project.
+description: HTML/Jinja2 template style guide for web apps.
 ---
 
-# HTML/Jinja2 Template Style Guide for `ant` Project
+# HTML/Jinja2 Template Style Guide (Web App Projects)
 
 ## Overview
-Templates use Jinja2 with `.j2` extension. All templates extend `base.j2`. PicoCSS replaces Bootstrap for styling.
+Conventions for HTML templates rendered via Jinja2 in Flask/web applications. Framework (e.g., PicoCSS) handles styling; templates should avoid framework-specific remnants from prior stacks.
 
 ## Template Structure
 ```
 templates/
-├── base.j2       # Base layout, head, scripts
+├── base.j2       # Base layout, head, scripts, global elements
 ├── index.j2      # Main content + sidebar layout
 ├── signin.j2     # Login form
 └── 404.j2        # Not-found page
 ```
 
-## Base Template (`base.j2`)
+## Base Template
 - DOCTYPE with `<html lang="en" dir="ltr">`
 - Meta charset utf-8, viewport responsive
 - Title block with default fallback
 - Favicon link
-- Stylesheet links: PicoCSS, Google Fonts, custom `style.css`, `codehilite.css`
+- Stylesheet links: CSS framework, custom `style.css`, highlight theme
 - Content block
-- Back-to-top button (inline SVG icon, no icon font)
-- Script links: vanilla `script.js` only (no jQuery, no Bootstrap bundle)
+- Floating action buttons (back-to-top, signout) — use inline SVG icons
+- Script links: vanilla JS only (no jQuery, no framework bundle JS)
 
 ## Extending Templates
 ```jinja2
@@ -42,22 +42,21 @@ templates/
 ```
 
 ## No Icon Fonts
-- Bootstrap Icons (`bi-*` classes) are REMOVED
+- External icon font classes are REMOVED
 - Replace with inline SVG for any needed icons
-- The back-to-top button uses an inline SVG arrow
 - No external icon font dependencies
 
-## PicoCSS Classes
-- Use Pico's built-in component classes: `.container`, `.card`, `.btn`, `.grid`, `.stack`
-- Form elements: Pico auto-styles `<form>`, `<input>`, `<button>`, `<label>`
-- No need for `form-control`, `btn-primary`, `btn-lg` etc. (Bootstrap remnants)
-- Use `role="alert"` with `.alert` classes for admonitions (already in CSS)
+## CSS Framework Classes
+- Use framework's built-in component classes where possible
+- Form elements: framework auto-styles `<form>`, `<input>`, `<button>`, `<label>`
+- No need for old framework's utility classes (`form-control`, `btn-primary`, etc.)
+- Use `role="alert"` with alert classes for status messages
 
 ## Data Passing from Flask
-Templates receive: `title`, `article`, `contents`, `current_path`, `links`, `wrong_pw`
-- `article` and `contents` are pre-rendered HTML strings (`| safe`)
-- `links` is a list of URL paths for pagination
-- `current_path` is the active URL for highlighting sidebar links
+Templates receive page-specific variables from route handlers:
+- Content variables are pre-rendered HTML strings (`| safe`)
+- Context variables include current path, link lists, error flags
+- Use `url_for('static', filename='...')` for asset references
 
 ## Sidebar Navigation
 ```jinja2
@@ -75,16 +74,12 @@ Templates receive: `title`, `article`, `contents`, `current_path`, `links`, `wro
 <main class="content">{% block content %}{% endblock %}</main>
 ```
 
-## Pagination (in index.j2)
-- Previous/Next links use Pico card or button styling
-- Conditional rendering based on `link == current_path`
-
 ## Sign-in Template
-- Form posts to `/signin/`
-- Uses Pico form styles (no custom `form-control` classes)
+- Form posts to auth route
+- Uses framework form styles (no custom input classes)
 - Password input with `required` attribute
-- Button uses Pico `.btn` (no Bootstrap button classes)
-- Error message shown when `wrong_pw` is truthy
+- Button uses framework `.btn` class
+- Error message shown when error flag is truthy
 
 ## 404 Template
 - Simple centered message
@@ -92,14 +87,14 @@ Templates receive: `title`, `article`, `contents`, `current_path`, `links`, `wro
 
 ## No External JS Dependencies
 - No jQuery
-- No Bootstrap bundle JS
+- No framework bundle JS
 - No Popper.js
-- Only `static/js/script.js` with vanilla JavaScript
+- Only custom `script.js` with vanilla JavaScript
 
 ## JS Integration Pattern
 ```html
 <script>
-// If page-specific JS needed, use IIFEs
+// Page-specific JS uses IIFEs
 (() => { /* code */ })()
 </script>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>

@@ -13,7 +13,8 @@ dotagent/
 │   ├── css-style-guide/        # CSS conventions for framework-layered apps
 │   ├── html-style-guide/       # Jinja2 template conventions, vanilla JS
 │   ├── bash-project-org/       # Bash: sourced modules, exit codes, security
-│   └── docs-writing-voice/     # Docs tone, structure, plain-text/Markdown format
+│   ├── docs-writing-voice/     # Docs tone, structure, plain-text/Markdown format
+│   └── git-commit-style/       # Commit messages: voice, types, grouped format
 └── cmds/
     └── <command-name>.json     # Custom agent commands (name, desc, prompt)
 ```
@@ -81,7 +82,15 @@ tools/build-cmd cmds/my-command.json --pi
 
 # For Codex (writes to .codex/commands/)
 tools/build-cmd cmds/my-command.json --codex
+
+# For every supported agent at once
+tools/build-cmd cmds/my-command.json --all
 ```
+
+note: `{{var}}` placeholders substitute at runtime **only** for hermes (from
+matching environment variables). for opencode/pi/codex the build script warns
+and leaves them literal — prefer wording prompts so the model figures out the
+value itself (e.g. "read the author from `git config`").
 
 ## writing your own
 

@@ -1,7 +1,7 @@
 ---
 name: ponytail
 category: software-development
-description: Lazy coding guard: YAGNI, stdlib first, shortest diff.
+description: "Lazy coding guard: YAGNI, stdlib first, shortest diff."
 ---
 
 # Ponytail

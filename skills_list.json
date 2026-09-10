@@ -1,0 +1,63 @@
+{
+  "version": "1.0.0",
+  "generated": "2026-09-10T00:00:00Z",
+  "skills": [
+    {
+      "name": "python-style-guide",
+      "category": "software-development",
+      "description": "Python code style guide for Flask projects.",
+      "path": "skills/python-style-guide/SKILL.md",
+      "references": []
+    },
+    {
+      "name": "css-style-guide",
+      "category": "software-development",
+      "description": "CSS style guide. Layout, spacing, typography, framework.",
+      "path": "skills/css-style-guide/SKILL.md",
+      "references": ["references/css-framework-migration.md"]
+    },
+    {
+      "name": "html-style-guide",
+      "category": "software-development",
+      "description": "HTML/Jinja2 template style guide for web apps.",
+      "path": "skills/html-style-guide/SKILL.md",
+      "references": []
+    },
+    {
+      "name": "bash-project-org",
+      "category": "software-development",
+      "description": "Bash project organization and conventions skill.",
+      "path": "skills/bash-project-org/SKILL.md",
+      "references": []
+    },
+    {
+      "name": "docs-writing-voice",
+      "category": "software-development",
+      "description": "Docs writing voice, format, and structure conventions.",
+      "path": "skills/docs-writing-voice/SKILL.md",
+      "references": ["references/plain-text-doc-formats.md"]
+    },
+    {
+      "name": "git-commit-style",
+      "category": "software-development",
+      "description": "Commit message style: voice, types, grouped multi-line format.",
+      "path": "skills/git-commit-style/SKILL.md",
+      "references": []
+    },
+    {
+      "name": "caveman",
+      "category": "software-development",
+      "description": "Terse replies: cut filler, keep all the substance.",
+      "path": "skills/caveman/SKILL.md",
+      "references": []
+    },
+    {
+      "name": "ponytail",
+      "category": "software-development",
+      "description": "Lazy coding guard: YAGNI, stdlib first, shortest diff.",
+      "path": "skills/ponytail/SKILL.md",
+      "references": []
+    }
+  ],
+  "categories": ["software-development"]
+}

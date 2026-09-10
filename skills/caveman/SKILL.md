@@ -1,7 +1,7 @@
 ---
 name: caveman
 category: software-development
-description: Terse replies: cut filler, keep all the substance.
+description: "Terse replies: cut filler, keep all the substance."
 ---
 
 # Caveman

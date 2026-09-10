@@ -1,4 +1,14 @@
 # Generated command output directories
+*.pyc
+__pycache__/
+*.egg-info/
+.hermes/
+.opencode/
 .pi/
 .codex/
-.opencode/
+.env
+venv/
+.venv/
+node_modules/
+*.so
+*.o

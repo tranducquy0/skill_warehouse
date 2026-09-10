@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+"""
+Validate all SKILL.md files in the dotagent repo.
+
+Checks:
+- Frontmatter exists and matches schema
+- Description ≤ 60 chars
+- Required fields present
+- Category is valid
+- Name is kebab-case
+"""
+
+import json
+import re
+import sys
+from pathlib import Path
+
+try:
+    import yaml
+except ImportError:
+    print("error: pyyaml required (pip install pyyaml)", file=sys.stderr)
+    sys.exit(1)
+
+try:
+    import jsonschema
+except ImportError:
+    print("error: jsonschema required (pip install jsonschema)", file=sys.stderr)
+    sys.exit(1)
+
+REPO_ROOT = Path(__file__).parent.parent
+SCHEMA_PATH = REPO_ROOT / "schemas" / "skill-frontmatter.schema.json"
+SKILLS_DIR = REPO_ROOT / "skills"
+
+VALID_CATEGORIES = {
+    "software-development",
+    "research",
+    "creative",
+    "productivity",
+    "web",
+    "media",
+    "email",
+    "social-media",
+    "note-taking",
+    "repo-style-guide-extractor",
+}
+
+
+def load_schema():
+    with open(SCHEMA_PATH) as f:
+        return json.load(f)
+
+
+def validate_frontmatter(frontmatter, skill_path):
+    errors = []
+
+    # Check required fields
+    for field in ("name", "category", "description"):
+        if field not in frontmatter:
+            errors.append(f"missing required field: {field}")
+            return errors  # Can't continue without these
+
+    # Name format
+    name = frontmatter["name"]
+    if not re.match(r"^[a-z0-9-]+$", name):
+        errors.append(f"name must be lowercase kebab-case: '{name}'")
+
+    # Category
+    category = frontmatter["category"]
+    if category not in VALID_CATEGORIES:
+        errors.append(f"invalid category: '{category}' (valid: {sorted(VALID_CATEGORIES)})")
+
+    # Description length
+    desc = frontmatter["description"]
+    if len(desc) > 60:
+        errors.append(f"description exceeds 60 chars ({len(desc)}): '{desc}'")
+    if not desc.strip():
+        errors.append("description cannot be empty")
+
+    # JSON schema validation
+    try:
+        jsonschema.validate(frontmatter, load_schema())
+    except jsonschema.ValidationError as e:
+        errors.append(f"schema violation: {e.message}")
+
+    return errors
+
+
+def extract_frontmatter(content):
+    """Extract YAML frontmatter from markdown content."""
+    if not content.startswith("---"):
+        return None, "missing frontmatter delimiter (---)"
+
+    try:
+        _, frontmatter_str, _ = content.split("---", 2)
+        return yaml.safe_load(frontmatter_str), None
+    except ValueError:
+        return None, "malformed frontmatter (need opening and closing ---)"
+    except yaml.YAMLError as e:
+        return None, f"invalid YAML: {e}"
+
+
+def main():
+    schema = load_schema()
+    all_errors = []
+
+    for skill_dir in sorted(SKILLS_DIR.iterdir()):
+        if not skill_dir.is_dir():
+            continue
+
+        skill_file = skill_dir / "SKILL.md"
+        if not skill_file.exists():
+            all_errors.append(f"{skill_dir.name}: missing SKILL.md")
+            continue
+
+        content = skill_file.read_text(encoding="utf-8")
+        frontmatter, err = extract_frontmatter(content)
+        if err:
+            all_errors.append(f"{skill_dir.name}: {err}")
+            continue
+
+        errors = validate_frontmatter(frontmatter, skill_file)
+        for err in errors:
+            all_errors.append(f"{skill_dir.name}: {err}")
+
+    if all_errors:
+        print("Validation failed:", file=sys.stderr)
+        for err in all_errors:
+            print(f"  - {err}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"OK: {len(list(SKILLS_DIR.iterdir()))} skills validated")
+
+
+if __name__ == "__main__":
+    main()

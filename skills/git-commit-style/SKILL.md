@@ -1,7 +1,7 @@
 ---
 name: git-commit-style
 category: software-development
-description: Commit message style: voice, types, grouped multi-line format.
+description: "Commit style: voice, types, grouped multi-line format."
 ---
 
 # Git Commit Style

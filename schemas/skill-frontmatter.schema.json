@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "dotagent SKILL.md frontmatter schema",
+  "type": "object",
+  "required": ["name", "category", "description"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Lowercase kebab-case identifier"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["software-development", "research", "creative", "productivity", "web", "media", "email", "social-media", "note-taking", "repo-style-guide-extractor"],
+      "description": "Skill category matching Hermes/agent conventions"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 60,
+      "minLength": 1,
+      "description": "One-line trigger for agent routing (≤60 chars)"
+    }
+  }
+}

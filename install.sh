@@ -68,13 +68,13 @@ BUILD_CMD="$REPO_ROOT/tools/build-cmd"
 # -- agent configurations (global config paths)
 declare -A AGENT_SKILLS_DIR
 AGENT_SKILLS_DIR[hermes]="$HOME/.hermes/skills"
-AGENT_SKILLS_DIR[opencode]="$HOME/.opencode/skills"
+AGENT_SKILLS_DIR[opencode]="${XDG_CONFIG_HOME:-$HOME/.config}/opencode/skills"
 AGENT_SKILLS_DIR[pi]="$HOME/.pi/skills"
 AGENT_SKILLS_DIR[codex]="$HOME/.codex/skills"
 
 declare -A AGENT_CMDS_DIR
 AGENT_CMDS_DIR[hermes]="$HOME/.hermes/plugins"
-AGENT_CMDS_DIR[opencode]="$HOME/.opencode/commands"
+AGENT_CMDS_DIR[opencode]="${XDG_CONFIG_HOME:-$HOME/.config}/opencode/commands"
 AGENT_CMDS_DIR[pi]="$HOME/.pi/commands"
 AGENT_CMDS_DIR[codex]="$HOME/.codex/commands"
 

@@ -202,3 +202,80 @@ for cmd_json in "$CMDS_DIR"/*.json; do
 done
 
 log_info "Done"
+
+# -- update skill tracker
+if [ "$dry_run" != true ]; then
+    python3 -c "
+import json, os, datetime
+from pathlib import Path
+
+tracker_path = os.path.join(os.environ['REPO_ROOT'], 'skill_tracker.json')
+tracker = {}
+if os.path.exists(tracker_path):
+    with open(tracker_path) as f:
+        tracker = json.load(f)
+
+# Build current state
+skills_state = []
+for skill_name in '${skill_names[@]}'.split():
+    entry = {'name': skill_name, 'category': '', 'installed': {}}
+    # Get category from skills_list.json
+    with open(os.path.join(os.environ['REPO_ROOT'], 'skills_list.json')) as f:
+        data = json.load(f)
+        for s in data['skills']:
+            if s['name'] == skill_name:
+                entry['category'] = s['category']
+                break
+    for agent in '${target_agents[@]}'.split():
+        if agent == 'hermes':
+            entry['installed'][agent] = {
+                'path': os.path.join(os.environ['HOME'], '.hermes/skills', skill_name),
+            }
+        elif agent == 'opencode':
+            xdg = os.environ.get('XDG_CONFIG_HOME', os.path.join(os.environ['HOME'], '.config'))
+            entry['installed'][agent] = {
+                'path': os.path.join(xdg, 'opencode/skills', skill_name),
+            }
+        elif agent == 'pi':
+            entry['installed'][agent] = {
+                'path': os.path.join(os.environ['HOME'], '.pi/skills', skill_name),
+            }
+        elif agent == 'codex':
+            entry['installed'][agent] = {
+                'path': os.path.join(os.environ['HOME'], '.codex/skills', skill_name),
+            }
+    skills_state.append(entry)
+
+commands_state = []
+for cmd_json in Path(os.environ['CMDS_DIR']).glob('*.json'):
+    cmd_name = cmd_json.stem
+    entry = {'name': cmd_name, 'installed': {}}
+    for agent in '${target_agents[@]}'.split():
+        if agent == 'hermes':
+            entry['installed'][agent] = {
+                'path': os.path.join(os.environ['HOME'], '.hermes/plugins', f'{cmd_name}.sh'),
+            }
+        elif agent == 'opencode':
+            xdg = os.environ.get('XDG_CONFIG_HOME', os.path.join(os.environ['HOME'], '.config'))
+            entry['installed'][agent] = {
+                'path': os.path.join(xdg, 'opencode/commands', f'{cmd_name}.md'),
+            }
+        elif agent == 'pi':
+            entry['installed'][agent] = {
+                'path': os.path.join(os.environ['HOME'], '.pi/commands', f'{cmd_name}.md'),
+            }
+        elif agent == 'codex':
+            entry['installed'][agent] = {
+                'path': os.path.join(os.environ['HOME'], '.codex/commands', f'{cmd_name}.md'),
+            }
+    commands_state.append(entry)
+
+tracker['skills'] = skills_state
+tracker['commands'] = commands_state
+tracker['last_updated'] = datetime.datetime.utcnow().isoformat() + 'Z'
+
+with open(tracker_path, 'w') as f:
+    json.dump(tracker, f, indent=2)
+print(f'updated skill_tracker.json')
+"
+fi

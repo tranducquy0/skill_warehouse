@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "dotagent command file schema",
+  "type": "object",
+  "required": ["name", "desc", "prompt"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Lowercase kebab-case command identifier"
+    },
+    "desc": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Short description of what the command does"
+    },
+    "prompt": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Full prompt template. May contain [arg_name] and [args] placeholders for universal argument syntax."
+    }
+  },
+  "examples": [
+    {
+      "name": "draft-commit",
+      "desc": "Generate a conventional commit from git diff",
+      "prompt": "You are a Git expert. Analyze the current git diff and produce a commit message."
+    }
+  ]
+}

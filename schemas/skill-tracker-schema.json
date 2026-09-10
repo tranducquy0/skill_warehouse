@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "dotagent skill tracker schema",
+  "type": "object",
+  "required": ["skills", "commands"],
+  "additionalProperties": false,
+  "description": "Tracks which skills and commands are deployed to which agents, with paths and versions.",
+  "properties": {
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "category", "installed"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$",
+            "description": "Skill identifier (kebab-case)"
+          },
+          "category": {
+            "type": "string",
+            "description": "Skill category"
+          },
+          "installed": {
+            "type": "object",
+            "description": "Per-agent installation status",
+            "patternProperties": {
+              "^[a-z-]+$": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Absolute path where the skill is installed"
+                  },
+                  "version": {
+                    "type": "string",
+                    "description": "Installed version (semver)"
+                  }
+                },
+                "required": ["path"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "installed"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$",
+            "description": "Command identifier (kebab-case)"
+          },
+          "installed": {
+            "type": "object",
+            "description": "Per-agent installation status",
+            "patternProperties": {
+              "^[a-z-]+$": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Absolute path where the command file is installed"
+                  },
+                  "version": {
+                    "type": "string",
+                    "description": "Installed version (semver)"
+                  }
+                },
+                "required": ["path"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of last tracker update"
+    }
+  },
+  "examples": [
+    {
+      "skills": [
+        {
+          "name": "python-style-guide",
+          "category": "software-development",
+          "installed": {
+            "hermes": {
+              "path": "/root/.hermes/skills/python-style-guide",
+              "version": "1.0.0"
+            },
+            "opencode": {
+              "path": "/root/.config/opencode/skills/python-style-guide",
+              "version": "1.0.0"
+            }
+          }
+        }
+      ],
+      "commands": [
+        {
+          "name": "draft-commit",
+          "installed": {
+            "hermes": {
+              "path": "/root/.hermes/plugins/draft-commit.sh",
+              "version": "1.0.0"
+            }
+          }
+        }
+      ],
+      "last_updated": "2026-09-10T07:00:00Z"
+    }
+  ]
+}

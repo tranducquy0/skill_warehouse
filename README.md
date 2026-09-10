@@ -14,7 +14,9 @@ dotagent/
 │   ├── html-style-guide/       # Jinja2 template conventions, vanilla JS
 │   ├── bash-project-org/       # Bash: sourced modules, exit codes, security
 │   ├── docs-writing-voice/     # Docs tone, structure, plain-text/Markdown format
-│   └── git-commit-style/       # Commit messages: voice, types, grouped format
+│   ├── git-commit-style/       # Commit messages: voice, types, grouped format
+│   ├── caveman/                # Terse replies: cut filler, keep substance
+│   └── ponytail/               # Lazy coding guard: YAGNI, stdlib first
 └── cmds/
     └── <command-name>.json     # Custom agent commands (name, desc, prompt)
 ```

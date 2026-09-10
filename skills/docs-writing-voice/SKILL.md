@@ -91,10 +91,18 @@ ERROR CODES
 ```
 
 ## Cross-File Consistency
-- If the project uses Markdown for README but plain-text for docs/, switch format per file
-- Keep the tone consistent across all files in the same project
-- Error messages in code should match the docs voice — playful, not generic
-- No skill fragmentation — a narrow README-specific skill should be broadened into a class-level umbrella (e.g. `docs-writing-voice`) that covers all documentation types rather than splitting by incident or file type
+|- If the project uses Markdown for README but plain-text for docs/, switch format per file
+|- Keep the tone consistent across all files in the same project
+|- Error messages in code should match the docs voice — playful, not generic
+|- No skill fragmentation — a narrow README-specific skill should be broadened into a class-level umbrella (e.g. `docs-writing-voice`) that covers all documentation types rather than splitting by incident or file type
+
+## Cross-Agent Documentation
+When documenting how a project integrates with multiple agent CLIs (Hermes, OpenCode, Codex, Pi):
+|- Lead with a **capability table** (agent name + what it does for the user), not a prose dump
+|- Include **agent-specific sync/copy commands** in code blocks per agent
+|- Use **`.gitignore`** to exclude generated agent config dirs (`/.pi/`, `/.codex/`, `/.opencode/`)
+|- Document the **generation workflow** (`tools/build-cmd`) once at the bottom — not per agent
+|- Warn about **runtime-only features** (e.g. `{{var}}` substitution works in Hermes plugins but not OpenCode/Pi/Codex markdown) — use a callout or inline note
 
 ## References
 - `references/plain-text-doc-formats.md` — detailed plain-text doc formatting rules, section ordering, and error code style

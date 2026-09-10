@@ -57,9 +57,14 @@ project/
 - No `readonly` or `declare` — even for constants
 
 ### Quoting & Substitution
-- Always double-quote variables: `"$var"`, `"$1"`, `"${VAR:-}"`
-- Use `$(...)` for command substitution, never backticks
-- Use `$'\n\t'` for special chars in IFS
+|- Always double-quote variables: `"$var"`, `"$1"`, `"${VAR:-}"`
+|- Use `$()` for command substitution, never backticks
+|- Use `$'\n\t'` for special chars in IFS
+
+### JSON Parsing in Bash
+- Prefer `python3 -c` for JSON extraction over sed/regex — JSON strings with `\n`, unicode, or escaped quotes break sed-based parsers
+- Minimal extraction pattern: `python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get(sys.argv[2],""))' "$file" "$key"`
+- Validate JSON upfront in a dedicated function using `json.load()` with proper error handling
 
 ### Conditionals
 - Use POSIX `[ ]` for tests, not `[[ ]]`
@@ -79,8 +84,19 @@ project/
 - Error messages should match the project's tone
 
 ### Argument Parsing
-- Use `case "$1" in ... esac`, not `getopts`
-- Include `--help|-h)`, `--*)` catch-all, and `*)` default
+|- Use `case "$1" in ... esac`, not `getopts`
+|- Include `--help|-h)`, `--*)` catch-all, and `*)` default
+|- For tools that target multiple agent formats, use `--all` to iterate over a list:
+  ```bash
+  case "${2:-}" in
+      --hermes)   agents=(hermes) ;;
+      --all)      agents=(hermes opencode pi codex) ;;
+      *)          usage; exit 2 ;;
+  esac
+  for agent in "${agents[@]}"; do
+      # generate per-agent output
+  done
+  ```
 
 ### Logging
 - Use a `log:*` namespace for all user-facing output

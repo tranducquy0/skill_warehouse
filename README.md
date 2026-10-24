@@ -125,6 +125,12 @@ cp -r skills/* .pi/skills/
 cp -r skills/* .codex/skills/
 ```
 
+`install.sh` also deploys the root `AGENTS.md` as global communication rules
+for OpenCode (`$XDG_CONFIG_HOME/opencode/AGENTS.md`), Pi
+(`$PI_CODING_AGENT_DIR/AGENTS.md`, default `~/.pi/agent/AGENTS.md`), and Codex
+(`$CODEX_HOME/AGENTS.md`, default `~/.codex/AGENTS.md`). Hermes has no native
+global `AGENTS.md` location, so the installer skips this file for Hermes.
+
 ## tooling
 
 `tools/build-cmd` generates agent-specific command files from JSON definitions:

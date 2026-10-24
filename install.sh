@@ -72,6 +72,11 @@ AGENT_SKILLS_DIR[opencode]="${XDG_CONFIG_HOME:-$HOME/.config}/opencode/skills"
 AGENT_SKILLS_DIR[pi]="$HOME/.pi/skills"
 AGENT_SKILLS_DIR[codex]="$HOME/.codex/skills"
 
+declare -A AGENT_RULES_DIR
+AGENT_RULES_DIR[opencode]="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
+AGENT_RULES_DIR[pi]="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
+AGENT_RULES_DIR[codex]="${CODEX_HOME:-$HOME/.codex}"
+
 declare -A AGENT_CMDS_DIR
 AGENT_CMDS_DIR[hermes]="$HOME/.hermes/plugins"
 AGENT_CMDS_DIR[opencode]="${XDG_CONFIG_HOME:-$HOME/.config}/opencode/commands"
@@ -183,6 +188,23 @@ for skill_name in "${skill_names[@]}"; do
             log_ok "installed $skill_name -> $target"
         fi
     done
+done
+
+# -- install global communication rules where AGENTS.md is loaded natively
+for target in "${target_agents[@]}"; do
+    rules_dir="${AGENT_RULES_DIR[$target]:-}"
+    if [ -z "$rules_dir" ]; then
+        log_warn "no global AGENTS.md location configured for $target; skipping communication rules"
+        continue
+    fi
+
+    if [ "$dry_run" = true ]; then
+        log_info "[DRY-RUN] would copy $REPO_ROOT/AGENTS.md -> $rules_dir/AGENTS.md"
+    else
+        mkdir -p "$rules_dir"
+        cp "$REPO_ROOT/AGENTS.md" "$rules_dir/AGENTS.md"
+        log_ok "installed global communication rules -> $target ($rules_dir/AGENTS.md)"
+    fi
 done
 
 # -- install commands (build for each agent)
